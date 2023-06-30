@@ -1,4 +1,4 @@
-module gorm.io/gorm
+module github.com/wang-xuemin/gorm
 
 go 1.16
 

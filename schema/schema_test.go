@@ -5,9 +5,9 @@ import (
 	"sync"
 	"testing"
 
-	"gorm.io/gorm"
-	"gorm.io/gorm/schema"
-	"gorm.io/gorm/utils/tests"
+	"github.com/wang-xuemin/gorm"
+	"github.com/wang-xuemin/gorm/schema"
+	"github.com/wang-xuemin/gorm/utils/tests"
 )
 
 func TestParseSchema(t *testing.T) {

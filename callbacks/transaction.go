@@ -1,7 +1,7 @@
 package callbacks
 
 import (
-	"gorm.io/gorm"
+	"github.com/wang-xuemin/gorm"
 )
 
 func BeginTransaction(db *gorm.DB) {
