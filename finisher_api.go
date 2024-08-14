@@ -376,8 +376,12 @@ func (db *DB) FirstOrCreate(dest interface{}, conds ...interface{}) (tx *DB) {
 	} else if len(db.Statement.assigns) > 0 {
 		exprs := tx.Statement.BuildCondition(db.Statement.assigns[0], db.Statement.assigns[1:]...)
 		assigns := map[string]interface{}{}
-		for _, expr := range exprs {
-			if eq, ok := expr.(clause.Eq); ok {
+		for i := 0; i < len(exprs); i++ {
+			expr := exprs[i]
+
+			if eq, ok := expr.(clause.AndConditions); ok {
+				exprs = append(exprs, eq.Exprs...)
+			} else if eq, ok := expr.(clause.Eq); ok {
 				switch column := eq.Column.(type) {
 				case string:
 					assigns[column] = eq.Value
@@ -393,14 +397,14 @@ func (db *DB) FirstOrCreate(dest interface{}, conds ...interface{}) (tx *DB) {
 	return tx
 }
 
-// Update updates column with value using callbacks. Reference: https://gorm.io/docs/update.html#Update-Changed-Fields
+// Update updates column with value using callbacks. Reference: https://github.com/wang-xuemin/docs/update.html#Update-Changed-Fields
 func (db *DB) Update(column string, value interface{}) (tx *DB) {
 	tx = db.getInstance()
 	tx.Statement.Dest = map[string]interface{}{column: value}
 	return tx.callbacks.Update().Execute(tx)
 }
 
-// Updates updates attributes using callbacks. values must be a struct or map. Reference: https://gorm.io/docs/update.html#Update-Changed-Fields
+// Updates updates attributes using callbacks. values must be a struct or map. Reference: https://github.com/wang-xuemin/docs/update.html#Update-Changed-Fields
 func (db *DB) Updates(values interface{}) (tx *DB) {
 	tx = db.getInstance()
 	tx.Statement.Dest = values

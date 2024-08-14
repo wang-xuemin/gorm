@@ -48,8 +48,10 @@ func TestToStringKey(t *testing.T) {
 	}{
 		{[]interface{}{"a"}, "a"},
 		{[]interface{}{1, 2, 3}, "1_2_3"},
+		{[]interface{}{1, nil, 3}, "1_nil_3"},
 		{[]interface{}{[]interface{}{1, 2, 3}}, "[1 2 3]"},
 		{[]interface{}{[]interface{}{"1", "2", "3"}}, "[1 2 3]"},
+		{[]interface{}{[]interface{}{"1", nil, "3"}}, "[1 <nil> 3]"},
 	}
 	for _, c := range cases {
 		if key := ToStringKey(c.values...); key != c.key {
@@ -98,6 +100,7 @@ func TestAssertEqual(t *testing.T) {
 		{"error not equal", errors.New("1"), errors.New("2"), false},
 		{"driver.Valuer equal", ModifyAt{Time: now, Valid: true}, ModifyAt{Time: now, Valid: true}, true},
 		{"driver.Valuer not equal", ModifyAt{Time: now, Valid: true}, ModifyAt{Time: now.Add(time.Second), Valid: true}, false},
+		{"driver.Valuer equal (ptr to nil ptr)", (*ModifyAt)(nil), &ModifyAt{}, false},
 	}
 	for _, test := range assertEqualTests {
 		t.Run(test.name, func(t *testing.T) {

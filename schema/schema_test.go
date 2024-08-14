@@ -19,6 +19,22 @@ func TestParseSchema(t *testing.T) {
 	checkUserSchema(t, user)
 }
 
+func TestParseSchemaWithMap(t *testing.T) {
+	type User struct {
+		tests.User
+		Attrs map[string]string `gorm:"type:Map(String,String);"`
+	}
+
+	user, err := schema.Parse(&User{}, &sync.Map{}, schema.NamingStrategy{})
+	if err != nil {
+		t.Fatalf("failed to parse user with map, got error %v", err)
+	}
+
+	if field := user.FieldsByName["Attrs"]; field.DataType != "Map(String,String)" {
+		t.Errorf("failed to parse user field Attrs")
+	}
+}
+
 func TestParseSchemaWithPointerFields(t *testing.T) {
 	user, err := schema.Parse(&User{}, &sync.Map{}, schema.NamingStrategy{})
 	if err != nil {
@@ -46,8 +62,8 @@ func checkUserSchema(t *testing.T, user *schema.Schema) {
 		{Name: "Active", DBName: "active", BindNames: []string{"Active"}, DataType: schema.Bool},
 	}
 
-	for _, f := range fields {
-		checkSchemaField(t, user, &f, func(f *schema.Field) {
+	for i := range fields {
+		checkSchemaField(t, user, &fields[i], func(f *schema.Field) {
 			f.Creatable = true
 			f.Updatable = true
 			f.Readable = true
@@ -136,8 +152,8 @@ func TestParseSchemaWithAdvancedDataType(t *testing.T) {
 		{Name: "Admin", DBName: "admin", BindNames: []string{"Admin"}, DataType: schema.Bool},
 	}
 
-	for _, f := range fields {
-		checkSchemaField(t, user, &f, func(f *schema.Field) {
+	for i := range fields {
+		checkSchemaField(t, user, &fields[i], func(f *schema.Field) {
 			f.Creatable = true
 			f.Updatable = true
 			f.Readable = true

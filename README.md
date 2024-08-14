@@ -26,12 +26,12 @@ The fantastic ORM library for Golang, aims to be developer friendly.
 
 ## Getting Started
 
-* GORM Guides [https://gorm.io](https://gorm.io)
-* Gen Guides [https://gorm.io/gen/index.html](https://gorm.io/gen/index.html)
+* GORM Guides [https://github.com/wang-xuemin](https://github.com/wang-xuemin)
+* Gen Guides [https://github.com/wang-xuemin/gen/index.html](https://github.com/wang-xuemin/gen/index.html)
 
 ## Contributing
 
-[You can help to deliver a better GORM, check out things you can do](https://gorm.io/contribute.html)
+[You can help to deliver a better GORM, check out things you can do](https://github.com/wang-xuemin/contribute.html)
 
 ## Contributors
 
@@ -41,4 +41,4 @@ The fantastic ORM library for Golang, aims to be developer friendly.
 
 © Jinzhu, 2013~time.Now
 
-Released under the [MIT License](https://github.com/go-gorm/gorm/blob/master/License)
+Released under the [MIT License](https://github.com/go-gorm/gorm/blob/master/LICENSE)

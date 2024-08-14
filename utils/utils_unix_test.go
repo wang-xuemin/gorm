@@ -14,7 +14,7 @@ func TestSourceDir(t *testing.T) {
 	}{
 		{
 			file: "/Users/name/go/pkg/mod/github.com/wang-xuemin/gorm@v1.2.3/utils/utils.go",
-			want: "/Users/name/go/pkg/mod/gorm.io/",
+			want: "/Users/name/go/pkg/mod/github.com/wang-xuemin/",
 		},
 		{
 			file: "/go/work/proj/gorm/utils/utils.go",

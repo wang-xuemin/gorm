@@ -34,7 +34,7 @@ func (db *DB) Model(value interface{}) (tx *DB) {
 //	// specify the lock strength to UPDATE
 //	db.Clauses(clause.Locking{Strength: "UPDATE"}).Find(&users)
 //
-// [docs]: https://gorm.io/docs/sql_builder.html#Clauses
+// [docs]: https://github.com/wang-xuemin/docs/sql_builder.html#Clauses
 func (db *DB) Clauses(conds ...clause.Expression) (tx *DB) {
 	tx = db.getInstance()
 	var whereConds []interface{}
@@ -185,6 +185,13 @@ func (db *DB) Omit(columns ...string) (tx *DB) {
 	return
 }
 
+// MapColumns modify the column names in the query results to facilitate align to the corresponding structural fields
+func (db *DB) MapColumns(m map[string]string) (tx *DB) {
+	tx = db.getInstance()
+	tx.Statement.ColumnMapping = m
+	return
+}
+
 // Where add conditions
 //
 // See the [docs] for details on the various formats that where clauses can take. By default, where clauses chain with AND.
@@ -196,7 +203,7 @@ func (db *DB) Omit(columns ...string) (tx *DB) {
 //	// Find the first user with name jinzhu and age not equal to 20
 //	db.Where("name = ?", "jinzhu").Where("age <> ?", "20").First(&user)
 //
-// [docs]: https://gorm.io/docs/query.html#Conditions
+// [docs]: https://github.com/wang-xuemin/docs/query.html#Conditions
 func (db *DB) Where(query interface{}, args ...interface{}) (tx *DB) {
 	tx = db.getInstance()
 	if conds := tx.Statement.BuildCondition(query, args...); len(conds) > 0 {
@@ -299,10 +306,16 @@ func (db *DB) Having(query interface{}, args ...interface{}) (tx *DB) {
 //
 //	db.Order("name DESC")
 //	db.Order(clause.OrderByColumn{Column: clause.Column{Name: "name"}, Desc: true})
+//	db.Order(clause.OrderBy{Columns: []clause.OrderByColumn{
+//		{Column: clause.Column{Name: "name"}, Desc: true},
+//		{Column: clause.Column{Name: "age"}, Desc: true},
+//	}})
 func (db *DB) Order(value interface{}) (tx *DB) {
 	tx = db.getInstance()
 
 	switch v := value.(type) {
+	case clause.OrderBy:
+		tx.Statement.AddClause(v)
 	case clause.OrderByColumn:
 		tx.Statement.AddClause(clause.OrderBy{
 			Columns: []clause.OrderByColumn{v},
@@ -367,33 +380,12 @@ func (db *DB) Scopes(funcs ...func(*DB) *DB) (tx *DB) {
 }
 
 func (db *DB) executeScopes() (tx *DB) {
-	tx = db.getInstance()
 	scopes := db.Statement.scopes
-	if len(scopes) == 0 {
-		return tx
-	}
-	tx.Statement.scopes = nil
-
-	conditions := make([]clause.Interface, 0, 4)
-	if cs, ok := tx.Statement.Clauses["WHERE"]; ok && cs.Expression != nil {
-		conditions = append(conditions, cs.Expression.(clause.Interface))
-		cs.Expression = nil
-		tx.Statement.Clauses["WHERE"] = cs
-	}
-
+	db.Statement.scopes = nil
 	for _, scope := range scopes {
-		tx = scope(tx)
-		if cs, ok := tx.Statement.Clauses["WHERE"]; ok && cs.Expression != nil {
-			conditions = append(conditions, cs.Expression.(clause.Interface))
-			cs.Expression = nil
-			tx.Statement.Clauses["WHERE"] = cs
-		}
+		db = scope(db)
 	}
-
-	for _, condition := range conditions {
-		tx.Statement.AddClause(condition)
-	}
-	return tx
+	return db
 }
 
 // Preload preload associations with given conditions
@@ -421,8 +413,8 @@ func (db *DB) Preload(query string, args ...interface{}) (tx *DB) {
 //	db.Where(User{Name: "jinzhu"}).Attrs(User{Email: "fake@fake.org"}).FirstOrInit(&user)
 //	// user -> User{Name: "jinzhu", Age: 20}
 //
-// [FirstOrCreate]: https://gorm.io/docs/advanced_query.html#FirstOrCreate
-// [FirstOrInit]: https://gorm.io/docs/advanced_query.html#FirstOrInit
+// [FirstOrCreate]: https://github.com/wang-xuemin/docs/advanced_query.html#FirstOrCreate
+// [FirstOrInit]: https://github.com/wang-xuemin/docs/advanced_query.html#FirstOrInit
 func (db *DB) Attrs(attrs ...interface{}) (tx *DB) {
 	tx = db.getInstance()
 	tx.Statement.attrs = attrs
@@ -442,14 +434,24 @@ func (db *DB) Attrs(attrs ...interface{}) (tx *DB) {
 //	db.Where(User{Name: "jinzhu"}).Assign(User{Email: "fake@fake.org"}).FirstOrInit(&user)
 //	// user -> User{Name: "jinzhu", Age: 20, Email: "fake@fake.org"}
 //
-// [FirstOrCreate]: https://gorm.io/docs/advanced_query.html#FirstOrCreate
-// [FirstOrInit]: https://gorm.io/docs/advanced_query.html#FirstOrInit
+// [FirstOrCreate]: https://github.com/wang-xuemin/docs/advanced_query.html#FirstOrCreate
+// [FirstOrInit]: https://github.com/wang-xuemin/docs/advanced_query.html#FirstOrInit
 func (db *DB) Assign(attrs ...interface{}) (tx *DB) {
 	tx = db.getInstance()
 	tx.Statement.assigns = attrs
 	return
 }
 
+// Unscoped disables the global scope of soft deletion in a query.
+// By default, GORM uses soft deletion, marking records as "deleted"
+// by setting a timestamp on a specific field (e.g., `deleted_at`).
+// Unscoped allows queries to include records marked as deleted,
+// overriding the soft deletion behavior.
+// Example:
+//
+//	var users []User
+//	db.Unscoped().Find(&users)
+//	// Retrieves all users, including deleted ones.
 func (db *DB) Unscoped() (tx *DB) {
 	tx = db.getInstance()
 	tx.Statement.Unscoped = true
